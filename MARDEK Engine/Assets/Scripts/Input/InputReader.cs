@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using System.Threading.Tasks;
 
 public class InputReader : MonoBehaviour
 {
@@ -12,8 +13,9 @@ public class InputReader : MonoBehaviour
     [SerializeField] List<InputActionBind> binds = new List<InputActionBind>();
     List<InputAction> bindedActions = new List<InputAction>();
 
-    void BindActions()
-    {        
+    async Task BindActions()
+    {
+        await Task.Yield();
         foreach (InputActionBind bind in binds)
         {
             if (bind.action != null)
@@ -28,8 +30,9 @@ public class InputReader : MonoBehaviour
         }
     }
 
-    void UnbindActions()
+    async Task UnbindActions()
     {
+        await Task.Yield();
         for(int i = bindedActions.Count-1; i >= 0; i--)
         {
             bindedActions[i].Dispose();
@@ -37,25 +40,28 @@ public class InputReader : MonoBehaviour
         }
     }
 
-    private void OnEnable()
+    private async void OnEnable()
     {
         readers.Add(this);
-        BindActions();
+        await BindActions();
     }
 
-    private void OnDisable()
+    private async void OnDisable()
     {
         readers.Remove(this);
-        UnbindActions();
+        await UnbindActions();
     }
 
     public static void RefreshInputReaders()
     {
-        foreach(var r in readers)
-        {
-            r.UnbindActions();
-            r.BindActions();
-        }
+        foreach (var r in readers)
+            r.Refresh();
+    }
+
+    async void Refresh()
+    {
+        await UnbindActions();
+        await BindActions();
     }
 
     [System.Serializable]

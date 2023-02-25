@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
+using MARDEK.Stats;
 
 namespace MARDEK.Inventory
 {
     [System.Serializable]
-    public class Slot
+    public class Slot : Stats.IActionSlot
     {
         public Item currentItem;
         public int currentAmount;
@@ -22,6 +23,20 @@ namespace MARDEK.Inventory
 
         public int amount { get { return this.currentAmount; } }
 
+        public string DisplayName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(item.displayName))
+                    return item.name;
+                else
+                    return item.displayName;
+            }
+        }
+        public Sprite Sprite => item.sprite;
+        public int Number => amount;
+        public string Description => item.description;
+
         public Slot(Item initialItem, int initialAmount, List<EquipmentCategory> itemFilter, bool canBeEmpty, bool canPlayerPutItems)
         {
             this.currentItem = initialItem;
@@ -37,13 +52,11 @@ namespace MARDEK.Inventory
         {
             return this.currentItem == null && this.currentAmount == 0;
         }
-
         public void SetEmpty()
         {
             this.currentItem = null;
             this.currentAmount = 0;
         }
-
         public void Validate()
         {
             if (this.itemFilter == null) throw new System.ArgumentException("Slot with item " + this.currentItem + " has null itemFilter");
@@ -57,7 +70,6 @@ namespace MARDEK.Inventory
             }
             if (this.currentAmount > 1 && !this.currentItem.CanStack()) throw new System.ArgumentException("Item " + this.currentItem.name + " can't stack");
         }
-
         public bool ApplyItemFilter(Item candidate)
         {
             if (candidate == null) return this.canBeEmpty;
@@ -89,10 +101,9 @@ namespace MARDEK.Inventory
             return takenItem;
         }
 
-        /*
-         * Lets this slot interact with the item on the cursor (in the inventory GUI). This should be called whenever the player clicks
-         * on this slot.
-         */
-       
+        public void ApplyAction(IStats user, IStats target)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

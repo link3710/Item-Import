@@ -20,7 +20,7 @@ namespace MARDEK.Inventory
         /*[SerializeField] string _elementText;
         public string elementText { get { return _elementText; } }*/
         [SerializeField] string _description;
-        public string description { get { return CreateFullDescription(_description); } }
+        public string description { get { return _description; } }
         [SerializeField] Sprite _sprite;
         public Sprite sprite { get { return _sprite; } }
         [SerializeField] Element _element;
@@ -36,13 +36,18 @@ namespace MARDEK.Inventory
         {
             return true;
         }
-        protected virtual string CreateFullDescription(string rawDescription)
-        {
-            return "MISCELLANIOUS ITEM\n\n\n" + rawDescription;
-        }
         protected virtual string CreateProperties()
         {
             return "";
+        }
+
+        /**
+         * The color that will be used to display the type of item this is when the player is in the battle loot
+         * menu or the treasure chest menu.
+         */
+        public virtual Color GetInventorySpaceColor()
+        {
+            return new Color(193f / 255f, 145 / 255f, 89f / 255f);
         }
     }
 }

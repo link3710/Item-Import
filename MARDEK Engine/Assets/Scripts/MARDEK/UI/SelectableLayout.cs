@@ -12,8 +12,8 @@ namespace MARDEK.UI
     {
         [SerializeField] ScrollRect scrollRect;
         [SerializeField] int numFittingEntries;
+        [SerializeField] bool invertHorizontalInput = false;
         int currentScrollIndex = 0;
-
         int index = 0;
         int Index
         {
@@ -32,6 +32,7 @@ namespace MARDEK.UI
             }
         }
 
+        GridLayoutGroup layout;
         Selectable[] selectables;
         List<Selectable> Selectables
         {
@@ -39,42 +40,48 @@ namespace MARDEK.UI
             {
                 List<Selectable> returnList = new List<Selectable>();
                 foreach (var s in selectables)
-                    if (s && s.isValid())
+                    if (s && s.IsValid())
                         returnList.Add(s);
                 return returnList;
             }
         }
         Selectable currentlySelected = null;
-        
-        GridLayoutGroup layout;
-        InputReader input;
 
+        private void CacheSelectables()
+        {
+            selectables = GetComponentsInChildren<Selectable>(true);
+            foreach (var s in Selectables)
+                if (s != currentlySelected)
+                    s.Deselect();
+            UpdateSelectionAtIndex(false);
+        }
         private void Awake()
         {
-            selectables = GetComponentsInChildren<Selectable>();
             layout = GetComponent<GridLayoutGroup>();
-            input = GetComponent<InputReader>();
         }
-
         private void OnEnable()
         {
-            UpdateSelectionAtIndex(false);
-            if(input)
-                input.enabled = true;
+            CacheSelectables();
         }
-
-        private void OnDisable()
+        private void Update()
         {
-            if (input)
-                input.enabled = false;            
+            if (selectables.Length != transform.childCount)
+            {
+                CacheSelectables();
+            }
         }
 
-        void UpdateSelectionAtIndex(bool playSFX = true)
+        public void UpdateSelectionAtIndex(bool playSFX = true)
         {
             if (currentlySelected)
                 currentlySelected.Deselect();
             if (Selectables.Count == 0)
+            {
+                currentlySelected = null;
                 return;
+            }
+            if (index > Selectables.Count)
+                index = 0;
             currentlySelected = Selectables[Index];
             currentlySelected.Select(playSFX);
             if (numFittingEntries > 0 && scrollRect != null)
@@ -84,7 +91,6 @@ namespace MARDEK.UI
                 if (desiredScrollIndex - currentScrollIndex < 0) SetScrollIndex(desiredScrollIndex);
             }
         }
-
         void SetScrollIndex(int newScrollIndex)
         {
             currentScrollIndex = newScrollIndex;
@@ -93,17 +99,9 @@ namespace MARDEK.UI
 
             int numNonFittingEntries = numTotalEntries - numFittingEntries;
             float scrollAmount = newScrollIndex / (float) numNonFittingEntries;
-            Debug.Log("scrollAmount is " + scrollAmount);
             
             if (scrollRect.vertical) scrollRect.verticalNormalizedPosition = 1f - scrollAmount;
             else scrollRect.horizontalNormalizedPosition = scrollAmount;
-        }
-
-        public void RefreshSelectables()
-        {
-            this.currentlySelected = null;
-            this.selectables = GetComponentsInChildren<Selectable>();
-            this.UpdateSelectionAtIndex(false);
         }
 
         public void HandleMovementInput(InputAction.CallbackContext ctx)
@@ -116,7 +114,6 @@ namespace MARDEK.UI
             if (value.y == 0)
                 HandleHorizontalInput(value.x);
         }
-
         void HandleVerticalInput(float value)
         {
             if (layout.constraint == GridLayoutGroup.Constraint.FixedRowCount && layout.constraintCount == 1) return;
@@ -132,11 +129,12 @@ namespace MARDEK.UI
 
             UpdateSelectionAtIndex();
         }
-
         void HandleHorizontalInput(float value)
         {
             if (layout.constraint == GridLayoutGroup.Constraint.FixedColumnCount && layout.constraintCount == 1) return;
 
+            if (invertHorizontalInput)
+                value = -value;
             if (layout.constraint == GridLayoutGroup.Constraint.FixedRowCount && layout.constraintCount != 1)
             {
                 if (value > 0) Index += layout.constraintCount;

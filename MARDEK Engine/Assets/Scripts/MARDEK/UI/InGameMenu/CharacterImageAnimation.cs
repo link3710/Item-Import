@@ -12,12 +12,17 @@ namespace MARDEK.UI
         [SerializeField] CharacterSelectable characterSelectable;
         [SerializeField] Image characterImage;
         [SerializeField] MoveDirection movementSpriteAnimationDirection;
+        [SerializeField] Sprite disabledSprite;
 
         public void Update()
         {
-            var characterInfo = characterSelectable.Character.CharacterInfo;
-            if (characterInfo == null)
+            if (characterSelectable.Character == null)
+            {
+                characterImage.sprite = disabledSprite;
                 return;
+            }
+                
+            var characterInfo = characterSelectable.Character.CharacterInfo;
             var clip = characterInfo.WalkSprites.GetClipByReference(movementSpriteAnimationDirection);
             var animRatio = Time.time % 1;
             characterImage.sprite = clip.GetSprite(animRatio);

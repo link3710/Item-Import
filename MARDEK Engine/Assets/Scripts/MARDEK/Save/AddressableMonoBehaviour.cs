@@ -31,6 +31,11 @@ namespace MARDEK.Save
         public Guid GetGuid() { return guid; }
         private void OnValidate()
         {
+            ValidateGuid();
+        }
+
+        protected virtual void ValidateGuid()
+        {
             if (guid == Guid.Empty)
             {
                 guid = Guid.NewGuid();
@@ -38,11 +43,12 @@ namespace MARDEK.Save
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             if (saveOptions.loadOnAwake)
                 Load();
         }
+
         private void OnEnable()
         {
             if(saveOptions.autoSave)

@@ -80,11 +80,6 @@ namespace MARDEK.Inventory
             return result;
         }
 
-        override protected string CreateFullDescription(string rawDescription)
-        {
-            return this.category.classification + "\n\n" + CreateStatsString(new string[]{"ATK", "DEF", "MDEF"}) + "\n" + rawDescription;
-        }
-
         protected override string CreateProperties()
         {
             string result = "";
@@ -105,6 +100,11 @@ namespace MARDEK.Inventory
             result += CreateStatsString(new string[]{"ThaumaResistance"}); 
         // TODO Automatic status effects
             return result;
+        }
+
+        override public Color GetInventorySpaceColor()
+        {
+            return category.color.ToColor();
         }
     }
 }

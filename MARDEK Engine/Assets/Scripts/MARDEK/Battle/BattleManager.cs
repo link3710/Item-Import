@@ -3,19 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using MARDEK.CharacterSystem;
 using MARDEK.Stats;
-using MARDEK.Skill;
 
 namespace MARDEK.Battle
 {
     public class BattleManager : MonoBehaviour
     {
         public static EncounterSet encounter { private get; set; }
-        [SerializeField, HideInInspector] FloatStat ACTStat = null;
-        [SerializeField, HideInInspector] IntegerStat AGLStat = null;
-        const float actResolution = 10;
+        [SerializeField] FloatStat ACTStat = null;
+        [SerializeField] IntegerStat AGLStat = null;
         [SerializeField] Party playerParty;
-        List<GameObject> enemies = new List<GameObject>();
-        [SerializeField] GameObject actionPickerUI = null;
+        [SerializeField] List<Character> enemies = new List<Character>();
 
         public List<Character> playableCharacters
         {
@@ -28,16 +25,20 @@ namespace MARDEK.Battle
         {
             get
             {
-                var chars = new List<Character>();
-                foreach (var enemy in enemies)
-                    chars.Add(enemy.GetComponent<Character>());
-                return chars;
+                return enemies;
+                //var chars = new List<Character>();
+                //foreach (var enemy in enemies)
+                //    chars.Add(enemy.GetComponent<Character>());
+                //return chars;
             }
         }
 
         public static Character characterActing { get; private set; }
-        public static SkillSlot selectedSkill { get; set; }
+        [SerializeField] GameObject characterActionUI = null;
+
+        public static Stats.IActionSlot selectedAction { get; set; }
         public static List<Character> targets { get; private set; }
+        const float actResolution = 2;
 
         private void Awake()
         {
@@ -48,24 +49,30 @@ namespace MARDEK.Battle
             if (characterActing == null)
             {
                 characterActing = StepActCycleTryGetNextCharacter();
-                if (characterActing)
+                if (characterActing != null)
                 {
-                    actionPickerUI.SetActive(true);
+                    characterActionUI.SetActive(true);
                 }
             }
             else
             {
-                // resolve action
-                if (selectedSkill != null)
+                if (selectedAction != null)
                 {
-                    if(targets != null)
+                    Character target;
+                    if (enemyCharacters.Contains(characterActing))
                     {
-                        foreach (var t in targets)
-                            Debug.Log($"{characterActing.name} uses {selectedSkill.Skill.DisplayName} on {t.name}");
-                        targets = null;
-                        selectedSkill = null;
-                        characterActing = null;
+                        target = playableCharacters[Random.Range(0, playableCharacters.Count-1)];
                     }
+                    else
+                    {
+                        target = enemyCharacters[Random.Range(0, enemyCharacters.Count-1)];
+                    }
+
+                    selectedAction.ApplyAction(characterActing, target);
+                    Debug.Log($"{characterActing.CharacterInfo.displayName} uses {selectedAction.DisplayName} targeting {target}");
+                    selectedAction = null;
+                    characterActing = null;
+                    characterActionUI.SetActive(false);
                 }
             }
         }
@@ -115,6 +122,11 @@ namespace MARDEK.Battle
                 if (c.GetStat(ACTStat).Value == maxAct)
                     return c;
             throw new System.Exception("A character had enough ACT to take a turn but wasn't returned by this method");
+        }
+        public void SkipCurrentCharacterTurn()
+        {
+            characterActing = null;
+            characterActionUI.SetActive(false);
         }
     }
 }
